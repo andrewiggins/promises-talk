@@ -13,11 +13,11 @@
     .hidden {
       display: none !important;
     }
-
+    
     .reveal .slides {
       text-align: left;
     }
-
+    
     .reveal pre code.full-slide {
       max-height: 500px;
     }
@@ -26,7 +26,7 @@
       font-size: 2.0em;
       text-transform: none;
     }
-
+    
     .column-code {
       display: flex;
       flex-direction: row;
@@ -35,10 +35,17 @@
       right: 100px;
       width: calc(100% + 200px);
     }
-
+    
     .column-code pre {
       overflow: auto;
       flex: 1 1 auto;
+    }
+
+    pre.extended {
+        position: relative;
+        /*left: -100px;*/
+        /*right: 100px;*/
+        width: 100%;
     }
   </style>
 
@@ -58,9 +65,14 @@
     <div class="slides">
       <section>
         <h1>You are missing the point of promises</h1>
-        <p>
-          MeePortal Learning Series<br /> Andre Wiggins <br /> April 15, 2017
-        </p>
+        <p>MeePortal Learning Series<br /> Andre Wiggins <br /> April 15, 2017</p>
+      </section>
+      <section>
+        <p>Talk largely inspired/taken from</p>
+        <ul>
+          <li><a href="https://blog.domenic.me/youre-missing-the-point-of-promises/">You're missing the point of Promises</a></li>
+          <li><a href="https://pouchdb.com/2015/05/18/we-have-a-problem-with-promises.html">We have a problem with Promises</a></li>
+        </ul>
       </section>
       <section>
         <section>
@@ -69,7 +81,7 @@
         </section>
         <section>
           <h3>Old callback pattern</h3>
-          <pre><code class="lang-javascript full-slide" data-trim>
+          <pre><code class="lang-javascript full-slide" data-trim contenteditable>
 function readJSON(filename, callback) {
   fs.readFile(filename, 'utf8', function (err, res){
     if (err) {
@@ -90,7 +102,7 @@ function readJSON(filename, callback) {
         </section>
         <section>
           <h3>With Promises...</h3>
-          <pre><code class="lang-javascript full-slide" data-trim>
+          <pre><code class="lang-javascript full-slide" data-trim contenteditable>
 function readJSON(filename) {
   return readFile(filename, 'utf8')
     .then(JSON.parse)
@@ -100,7 +112,8 @@ function readJSON(filename) {
         </section>
         <section>
           <h3>So what are Promises?</h3>
-          <p>Objects with a <code>then()</code> method that allow us to assign code to be run (callback) once an async result is available</p>
+          <p>Objects with a <code>then()</code> method that allow us to assign code to be run (callback) once an async result
+            is available</p>
           <pre><code class="javascript">
 getUser("andwi")
   .then(user => getFamily(user))
@@ -122,7 +135,7 @@ getUser("andwi")
         </section>
         <section>
           <h3>Synchronous functions</h3>
-          <pre><code class="language-javascript full-slide" data-trim>
+          <pre><code class="language-javascript full-slide" data-trim contenteditable>
 try {
   var tweets = getTweetsFor("domenic"); // blocking
   var shortUrls = parseTweetsForUrls(tweets);
@@ -139,7 +152,7 @@ try {
         <section>
           <h3>Same code but async with promises</h3>
           <div class="column-code">
-            <pre><code class="language-javascript full-slide">
+            <pre><code class="language-javascript full-slide" contenteditable>
 try {
   var tweets = getTweetsFor("domenic"); // blocking
   var shortUrls = parseTweetsForUrls(tweets);
@@ -154,7 +167,7 @@ try {
   console.error("Error with the twitterverse: ", error);
 }
             </code></pre>
-            <pre><code class="language-javascript full-slide">
+            <pre><code class="language-javascript full-slide" contenteditable>
 getTweetsFor("domenic") // promise-returning function
   .then(function (tweets) {
     var shortUrls = parseTweetsForUrls(tweets);
@@ -178,9 +191,9 @@ getTweetsFor("domenic") // promise-returning function
       </section>
       <section>
         <section>
-          <h3>Compose promises</h3>
-          <p>Don't...</p>
-          <pre><code class="language-javascript full-slide">
+          <h3>Don't overly nest promises</h3>
+          <p>Avoid the "the promisey pyramid of doom"</p>
+          <pre><code class="language-javascript full-slide" contenteditable>
 remotedb.allDocs({
   include_docs: true,
   attachments: true
@@ -197,9 +210,9 @@ remotedb.allDocs({
             </code></pre>
         </section>
         <section>
-          <h3>Compose promises</h3>
-          <p>Do return values and promises</p>
-          <pre><code class="language-javascript full-slide">
+          <h3>Do compose promises</h3>
+          <p>Return promises</p>
+          <pre><code class="language-javascript full-slide" contenteditable>
 remotedb.allDocs(...).then(function (resultOfAllDocs) {
   return localdb.put(...);
 }).then(function (resultOfPut) {
@@ -210,52 +223,189 @@ remotedb.allDocs(...).then(function (resultOfAllDocs) {
   console.log(err);
 });
             </code></pre>
-          </section>
+        </section>
+        <section>
+          <h3>Do use functions to simplify your promise chains</h3>
+          <p>Sometimes a "pyramid of doom" is unavoidable. Use functions to reduce nesting</p>
+          <pre><code class="language-javascript full-slide" contenteditable>
+putYourRightFootIn()
+  .then(putYourRightFootOut)
+  .then(putYourRightFootIn)  
+  .then(shakeItAllAbout);
+          </code></pre>
+        </section>
       </section>
       <section>
         <section>
-          <h3>Use Promise.all for array of promises</h3>
+          <h3>Don't only use synchronous array helpers</h3>
+          <pre><code class="language-javascript full-slide" data-trim contenteditable>
+// I want to remove() all docs
+db.allDocs({include_docs: true}).then(function (result) {
+  result.rows.forEach(function (row) {
+    db.remove(row.doc);  
+  });
+}).then(function () {
+  // I naively believe all docs have been removed() now!
+});
+          </code></pre>
+          <div><small>The first function is actually returning undefined.</small></div>
         </section>
         <section>
-
+          <h3>Do use asynchronous Promise-based array helpers</h3>
+          <pre><code class="language-javascript full-slide" data-trim contenteditable>
+db.allDocs({include_docs: true}).then(function (result) {
+  return Promise.all(result.rows.map(function (row) {
+    return db.remove(row.doc);
+  }));
+}).then(function (arrayOfResults) {
+  // All docs have really been removed() now!
+});
+          </code></pre>
+          <small>Use Promise.all to resolve lists of promises. Other promise libraries have more array helpers</small>
         </section>
       </section>
       <section>
         <section>
-          <h3>Use catch</h3>
+          <h3>Don't use <code>.then</code> <code>onRejection</code> parameter</h3>
+          <pre><code class="language-javascript full-slide" data-trim contenteditable>
+somePromise().then(function() {
+  throw new Error("I can't handle the result of somePromise!");
+}, function (error) {
+  console.log(error) // &lt;-- never gets called with the error thrown above
+})
+          </code></pre>
         </section>
         <section>
-
+          <h3>Do use catch to handle errors</h3>
+          <pre><code class="language-javascript full-slide" data-trim contenteditable>
+somePromise().then(function () {
+  throw new Error("I can't handle the result of somePromise!");
+}).catch(console.log.bind(console)); // &lt;-- this is badass
+          </code></pre>
+        </section>
+      </section>
+      <section>
+        <section>
+          <h3>Don't use side effects instead of returning</h3>
+          <pre><code class="language-javascript full-slide" data-trim contenteditable>
+somePromise().then(function () {
+  someOtherPromise();
+}).then(function () {
+  // Gee, I hope someOtherPromise() has resolved!
+  // Spoiler alert: it hasn't.
+});
+          </code></pre>
+        </section>
+        <section>
+          <h3>Do use return and throw</h3>
+          <p>Return other promises</p>
+          <pre><code class="language-javascript full-slide" data-trim contenteditable>
+getUserByName('nolan').then(function (user) {
+  return getUserAccountById(user.id);
+}).then(function (userAccount) {
+  // I got a user account!
+});
+          </code></pre>
+        </section>
+        <section>
+          <h3>Do use return and throw</h3>
+          <p>Return synchronous values</p>
+          <pre><code class="language-javascript full-slide" data-trim contenteditable>
+getUserByName('nolan').then(function (user) {
+  if (inMemoryCache[user.id]) {
+    return inMemoryCache[user.id];    // returning a synchronous value!
+  }
+  return getUserAccountById(user.id); // returning a promise!
+}).then(function (userAccount) {
+  // I got a user account!
+});
+          </code></pre>
+        </section>
+        <section>
+          <h3>Do use return and throw</h3>
+          <p>Throws a synchronous error</p>
+          <pre><code class="language-javascript full-slide" data-trim contenteditable>
+getUserByName('nolan').then(function (user) {
+  if (user.isLoggedOut()) {
+    throw new Error('user logged out!'); // throwing a synchronous error!
+  }
+  if (inMemoryCache[user.id]) {
+    return inMemoryCache[user.id];       // returning a synchronous value!
+  }
+  return getUserAccountById(user.id);    // returning a promise!
+}).then(function (userAccount) {
+  // I got a user account!
+}).catch(function (err) {
+  // Boo, I got an error!
+});
+          </code></pre>
         </section>
       </section>
       <section>
         <section>
           <h3>Don't use defer</h3>
+          <p>Doesn't catch synchronous errors for you</p>
+          <pre><code class="language-javascript full-slide" data-trim contenteditable>
+function delay(ms) {
+    var deferred = Promise.defer(); // warning, defer is deprecated, use the promise constructor
+    setTimeout(function(){
+        deferred.fulfill();
+    }, ms);
+    return deferred.promise;
+}
+          </code></pre>
         </section>
         <section>
-
+          <h3>Use Promise constructor</h3>
+          <p>Catches synchronous errors for you</p>
+          <pre><code class="language-javascript full-slide" data-trim contenteditable>
+function delay(ms) {
+  return new Promise((resolve, reject) => {
+    setTimeout(() => resolve("result of delay"), ms);
+  });
+}
+          </code></pre>
         </section>
       </section>
       <section>
         <section>
-          <h3>Use return and throw</h3>
+          <h3>Don't recreate promises when you already have one</h3>
+          <p>..using either the defer pattern or the Promise constructor</p>
+          <pre><code class="language-javascript full-slide" data-trim contenteditable>
+function getSomethingAsync(url) {  
+  var deferred = $q.defer();
+  $http.get(url).then(function(json) {
+    // do some stuff ...
+    deferred.resolve(JSON.parse(json));
+  });
+  return deferred.promise();
+}
+          </code></pre>
         </section>
         <section>
-
+          <h3>Do chain more promises and handling off the existing promise</h3>
+          <pre><code class="language-javascript full-slide" data-trim contenteditable>
+function getSomethingAsync(url) {  
+  return $http.get(url).then(function(json) {
+    return JSON.parse(json);
+  });
+}
+          </pre></code>
         </section>
       </section>
       <section>
         <section>
           <h3>Use Promise.resolve or $q.resolve</h3>
-        </section>
-        <section>
-
+          <p>Use Promise.resolve to create promises from synchronous values</p>
+          <pre><code class="language-javascript full-slide" data-trim contenteditable>
+Promise.resolve(someSynchronousValue).then(/* ... */);
+          </code></pre>
         </section>
       </section>
       <section>
         <section>
-          <h3>Don't break the then chain</h3>
-http://taoofcode.net/promise-anti-patterns/
+          <h3>Don't break the <code>then</code> chain</h3>
+          <pre><code class="language-javascript full-slide" data-trim contenteditable>
 function anAsyncCall() {
     var promise = doSomethingAsync();
     promise.then(function() {
@@ -264,34 +414,152 @@ function anAsyncCall() {
     
     return promise;
 }
+          </code></pre>
+          <p class="fragment">Errors in <code>somethingComplicated</code> can't be handled</p>
         </section>
         <section>
-  function anAsyncCall() {
-    var promise = doSomethingAsync();
-    return promise.then(function() {
-        somethingComplicated()
-    });   
+          <h3>Do chain promises</h3>
+          <pre><code class="language-javascript full-slide" data-trim contenteditable>
+function anAsyncCall() {
+  var promise = doSomethingAsync();
+  return promise.then(function() {
+      somethingComplicated()
+  });   
 }
+          </code></pre>
         </section>
       </section>
       <section>
         <section>
           <h2>Puzzles!</h2>
+          <p>Answer the following with when does each function execute, and with what arguments</p>
+          <a class="hidden jsbin-embed" href="https://jsbin.com/wajigus/1/embed?js,console,output&height=400px">JS Bin on jsbin.com</a>
         </section>
         <section>
-          <a class="jsbin-embed" href="https://jsbin.com/wajigus/1/embed?js,console,output">JS Bin on jsbin.com</a>
+          <h3>Puzzle #1</h3>
+          <pre class="extended"><code class="language-javascript full-slide" data-trim contenteditable>
+doSomething().then(function () {
+  return doSomethingElse();
+}).then(finalHandler);
+          </code></pre>
         </section>
-      </section>
-      <section>
         <section>
-          <h2>Promise/A+ and ES6 Promise spec</h2>
+          <h3>Puzzle #1 Solution</h3>
+          <pre class="extended"><code class="language-javascript" data-trim contenteditable>
+doSomething().then(function () {
+  return doSomethingElse();
+}).then(finalHandler);
+          </code></pre>
+          <pre class="extended"><code data-trim>
+doSomething
+|-----------------|
+                  doSomethingElse(undefined)
+                  |------------------|
+                                     finalHandler(resultOfDoSomethingElse)
+                                     |------------------|
+          </code></pre>
         </section>
+        <section>
+          <h3>Puzzle #2</h3>
+          <pre class="extended"><code class="language-javascript full-slide" data-trim contenteditable>
+doSomething().then(function () {
+  doSomethingElse();
+}).then(finalHandler);
+          </code></pre>
+        </section>
+        <section>
+          <h3>Puzzle #2 Solution</h3>
+          <pre class="extended"><code class="language-javascript" data-trim contenteditable>
+doSomething().then(function () {
+  doSomethingElse();
+}).then(finalHandler);
+          </code></pre>
+          <pre class="extended"><code data-trim>
+doSomething
+|-----------------|
+                  doSomethingElse(undefined)
+                  |------------------|
+                  finalHandler(undefined)
+                  |------------------|
+          </code></pre>
+        </section>
+        <section>
+            <h3>Puzzle #3</h3>
+            <pre class="extended"><code class="language-javascript full-slide" data-trim contenteditable>
+doSomething().then(doSomethingElse())
+  .then(finalHandler);
+            </code></pre>
+          </section>
+          <section>
+            <h3>Puzzle #3 Solution</h3>
+            <pre class="extended"><code class="language-javascript" data-trim contenteditable>
+doSomething().then(doSomethingElse())
+  .then(finalHandler);
+            </code></pre>
+            <pre class="extended"><code data-trim>
+doSomething
+|-----------------|
+doSomethingElse(undefined)
+|---------------------------------|
+                  finalHandler(resultOfDoSomething)
+                  |------------------|
+            </code></pre>
+          </section>
+          <section>
+              <h3>Puzzle #4</h3>
+              <pre class="extended"><code class="language-javascript full-slide" data-trim contenteditable>
+doSomething().then(doSomethingElse)
+  .then(finalHandler);
+              </code></pre>
+            </section>
+            <section>
+              <h3>Puzzle #4 Solution</h3>
+              <pre class="extended"><code class="language-javascript" data-trim contenteditable>
+doSomething().then(doSomethingElse)
+  .then(finalHandler);
+              </code></pre>
+              <pre class="extended"><code data-trim>
+doSomething
+|-----------------|
+                  doSomethingElse(resultOfDoSomething)
+                  |------------------|
+                                     finalHandler(resultOfDoSomethingElse)
+                                     |------------------|
+              </code></pre>
+            </section>
+          </section>
       </section>
       <section>
         <section>
           <h2>Handling unhandled rejections</h2>
           <p>Some promise libraries require <code>.done()</code> so that unhandled rejected promises are known</p>
           <p>Other libraries use a heuristic to determine when a rejected promise goes unhandled</p>
+        </section>
+      </section>
+      <section>
+        <section>
+          <h2>Promises/A+ and ES6 Promise spec</h2>
+          <p>Promises/A+ spec developed circa 2013</p>
+          <p>ES6 promises started arriving in browsers circa 2016</p>
+        </section>
+        <section>
+          <h3>Promises/A+ spec</h3>
+          <p>
+            A <a href="https://promisesaplus.com/">spec</a> that defines an interoperable <code>then()</code> function
+            so people can easily work with different promise implementations provided by various libraries.
+          </p>
+        </section>
+        <section>
+          <h3>ES6 Promise spec</h3>
+          <p>An implementation of the Promises/A+ spec that browsers implement.</p>
+          <p>Includes some helper functions such as</p>
+          <ul>
+            <li>.catch()</li>
+            <li>.all()</li>
+            <li>.race()</li>
+            <li>.resolve()</li>
+            <li>.reject()</li>
+          </ul>
         </section>
       </section>
       <section>
@@ -311,14 +579,14 @@ function anAsyncCall() {
           <a class="jsbin-embed" href="http://jsbin.com/gadizuf/embed?js,console&height=400px">JS Bin on jsbin.com</a>
         </section>
         <section>
-          <h3>Not always async</h3>
-          <p>JQuery sometimes runs synchronously and sometimes runs asynchrounously</p>
-          <pre><code class="javascript" data-trim>
-jQueryPromise.then(function () {
-    myObject.state = "X";
-});
-myObject.state = "A";
-        </code></pre>
+          <h3>Expected async behavior</h3>
+          <p>Promise resolution always happens on next event loop tick. Good promise libraries do this.</p>
+          <a class="jsbin-embed" href="http://jsbin.com/begogib/embed?js,console">JS Bin on jsbin.com</a>
+        </section>
+        <section>
+          <h3>JQuery promises are not always async</h3>
+          <p>JQuery sometimes executes resolution chain synchronously and sometimes runs asynchrounously</p>
+          <a class="jsbin-embed" href="http://jsbin.com/neyemu/embed?js,console">JS Bin on jsbin.com</a>
         </section>
         <section>
           <h3>Current state</h3>
@@ -347,7 +615,7 @@ myObject.state = "A";
             </li>
             <li>
               <a href="https://github.com/stefanpenner/es6-promise">es6-promise</a><br /> A polyfill for ES6-style Promises.
-              Subset of rsvp to minimally match ES6
+              Subset of rsvp to minimally match ES6 spec
             </li>
           </ul>
         </section>
@@ -361,17 +629,17 @@ myObject.state = "A";
       </section>
       <section>
         <h2>Resources</h2>
-        <p>Talk largely inspired by</p>
+        <p>Talk largely inspired/taken from</p>
         <ul>
-          <li>https://blog.domenic.me/youre-missing-the-point-of-promises/</li>
-          <li>https://pouchdb.com/2015/05/18/we-have-a-problem-with-promises.html</li>
+          <li><a href="https://blog.domenic.me/youre-missing-the-point-of-promises/">You're missing the point of Promises</a></li>
+          <li><a href="https://pouchdb.com/2015/05/18/we-have-a-problem-with-promises.html">We have a problem with promises</a></li>
         </ul>
-        <p>Check out <a href="https://www.youtube.com/watch?v=hf1T_AONQJU&feature=youtu.be">great youtube talk on promises</a></p>
-        <p>Promises explanation: https://www.promisejs.org/</p>
-        <p>More good patterns and anti-patterns</p>
+        <p>Check out this <a href="https://www.youtube.com/watch?v=hf1T_AONQJU&feature=youtu.be">great youtube talk on promises</a></p>
+        <p><a href=" https://www.promisejs.org/">Promises explanation</a></p>
+        <p>More good patterns and anti-patterns:</p>
         <ul>
-          <li>http://taoofcode.net/promise-anti-patterns/</li>
-          <li>http://www.datchley.name/promise-patterns-anti-patterns/</li>
+          <li><a href="http://taoofcode.net/promise-anti-patterns/">Promise Anti-Patterns</a></li>
+          <li><a href="http://www.datchley.name/promise-patterns-anti-patterns/">Promise patterns &amp; Anti-Patterns</a></li>
         </ul>
       </section>
     </div>
