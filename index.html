@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width">
+  <title>You're missing the point of Promises</title>
+
+  <link rel="stylesheet" href="lib/zenburn.min.css">
+  <link rel="stylesheet" href="node_modules/reveal.js/css/reveal.css">
+  <link rel="stylesheet" href="node_modules/reveal.js/css/theme/black.css">
+  <style>
+    .hidden {
+      display: none !important;
+    }
+
+    .reveal .slides {
+      text-align: left;
+    }
+
+    .reveal pre code.full-slide {
+      max-height: 500px;
+    }
+    
+    .slides section:nth-child(1) h1 {
+      font-size: 2.0em;
+      text-transform: none;
+    }
+
+    .column-code {
+      display: flex;
+      flex-direction: row;
+      position: relative;
+      left: -100px;
+      right: 100px;
+      width: calc(100% + 200px);
+    }
+
+    .column-code pre {
+      overflow: auto;
+      flex: 1 1 auto;
+    }
+  </style>
+
+  <script src="node_modules/headjs/dist/1.0.0/head.js"></script>
+  <script>
+    var link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.type = 'text/css';
+    link.href = window.location.search.match(/print-pdf/gi) ? 'node_modules/reveal.js/css/print/pdf.css' : 'node_modules/reveal.js/css/print/paper.css';
+    document.getElementsByTagName('head')[0].appendChild(link);
+  </script>
+</head>
+
+<body>
+
+  <div class="reveal">
+    <div class="slides">
+      <section>
+        <h1>You are missing the point of promises</h1>
+        <p>
+          MeePortal Learning Series<br /> Andre Wiggins <br /> April 15, 2017
+        </p>
+      </section>
+      <section>
+        <section>
+          <h2>What are promises?</h2>
+          <blockquote>Promises are a software abstraction that makes working with asynchronous operations much more pleasant.</blockquote>
+        </section>
+        <section>
+          <h3>Old callback pattern</h3>
+          <pre><code class="lang-javascript full-slide" data-trim>
+function readJSON(filename, callback) {
+  fs.readFile(filename, 'utf8', function (err, res){
+    if (err) {
+      callback(err);
+    }
+    else {
+      try {
+        res = JSON.parse(res);
+      } catch (ex) {
+        return callback(ex);
+      }
+
+      callback(null, res);
+    }
+  });
+}
+          </code></pre>
+        </section>
+        <section>
+          <h3>With Promises...</h3>
+          <pre><code class="lang-javascript full-slide" data-trim>
+function readJSON(filename) {
+  return readFile(filename, 'utf8')
+    .then(JSON.parse)
+    .catch(err => console.error(err))
+}
+          </code></pre>
+        </section>
+        <section>
+          <h3>So what are Promises?</h3>
+          <p>Objects with a <code>then()</code> method that allow us to assign code to be run (callback) once an async result is available</p>
+          <pre><code class="javascript">
+getUser("andwi")
+  .then(user => getFamily(user))
+  .then(family => transform(family))
+  .then(data => console.log(data))
+  .catch(error => console.log(error));
+          </code></pre>
+          <p>So basically prettier callbacks?</p>
+        </section>
+        <section>
+          <h3>More than just callback aggregation</h3>
+          <p>Promises bring back two fundamental aspects of synchronous functions</p>
+          <ul>
+            <li>using <code>return</code> for output</li>
+            <li>using <code>throw</code> for errors</li>
+            <li>using "the stack"" to manage relationship between outputs, inputs, and errors</li>
+          </ul>
+          <p>In other words, make asynchronous code behave more like synchronous code</p>
+        </section>
+        <section>
+          <h3>Synchronous functions</h3>
+          <pre><code class="language-javascript full-slide" data-trim>
+try {
+  var tweets = getTweetsFor("domenic"); // blocking
+  var shortUrls = parseTweetsForUrls(tweets);
+  var mostRecentShortUrl = shortUrls[0];
+  var expandedUrl = expandUrlUsingTwitterApi(mostRecentShortUrl);
+  var responseBody = httpGet(expandedUrl);
+  console.log("Most recent link text:", responseBody);
+} catch (error) {
+  console.error("Error with the twitterverse: ", error);
+}
+          </code></pre>
+          <small>Functional composition &amp; error bubbling are enabled using the stack</small>
+        </section>
+        <section>
+          <h3>Same code but async with promises</h3>
+          <div class="column-code">
+            <pre><code class="language-javascript full-slide">
+try {
+  var tweets = getTweetsFor("domenic"); // blocking
+  var shortUrls = parseTweetsForUrls(tweets);
+  var mostRecentShortUrl = shortUrls[0];
+  var expandedUrl = expandUrlUsingTwitterApi(mostRecentShortUrl);
+
+  var responseBody = httpGet(expandedUrl);
+
+  console.log("Most recent link text:", responseBody);
+
+} catch (error) {
+  console.error("Error with the twitterverse: ", error);
+}
+            </code></pre>
+            <pre><code class="language-javascript full-slide">
+getTweetsFor("domenic") // promise-returning function
+  .then(function (tweets) {
+    var shortUrls = parseTweetsForUrls(tweets);
+    var mostRecentShortUrl = shortUrls[0];
+    return expandUrlUsingTwitterApi(mostRecentShortUrl); // promise
+  })
+  .then(httpGet) // promise-returning function
+  .then(function (response) {
+    console.log("Most recent link text:", responseBody);
+  })
+  .catch(function (error) {
+    console.error("Error with the twitterverse:", error);
+  });
+            </code></pre>
+          </div>
+          <small>Functional composition &amp; error bubbling are enabled using Promises</small>
+        </section>
+      </section>
+      <section>
+        <h2>Examples: Anti-patterns and Patterns</h2>
+      </section>
+      <section>
+        <section>
+          <h3>Compose promises</h3>
+          <p>Don't...</p>
+          <pre><code class="language-javascript full-slide">
+remotedb.allDocs({
+  include_docs: true,
+  attachments: true
+}).then(function (result) {
+  var docs = result.rows;
+  docs.forEach(function(element) {
+    localdb.put(element.doc).then(function(response) {
+      alert("Pulled doc with id " + element.doc._id + " and added to local db.");
+    }).catch(function (err) {
+      if (err.name == 'conflict') {
+        localdb.get(element.doc._id).then(function (resp) {
+          localdb.remove(resp._id, resp._rev).then(function (resp) {
+// et cetera...
+            </code></pre>
+        </section>
+        <section>
+          <h3>Compose promises</h3>
+          <p>Do return values and promises</p>
+          <pre><code class="language-javascript full-slide">
+remotedb.allDocs(...).then(function (resultOfAllDocs) {
+  return localdb.put(...);
+}).then(function (resultOfPut) {
+  return localdb.get(...);
+}).then(function (resultOfGet) {
+  return localdb.put(...);
+}).catch(function (err) {
+  console.log(err);
+});
+            </code></pre>
+          </section>
+      </section>
+      <section>
+        <section>
+          <h3>Use Promise.all for array of promises</h3>
+        </section>
+        <section>
+
+        </section>
+      </section>
+      <section>
+        <section>
+          <h3>Use catch</h3>
+        </section>
+        <section>
+
+        </section>
+      </section>
+      <section>
+        <section>
+          <h3>Don't use defer</h3>
+        </section>
+        <section>
+
+        </section>
+      </section>
+      <section>
+        <section>
+          <h3>Use return and throw</h3>
+        </section>
+        <section>
+
+        </section>
+      </section>
+      <section>
+        <section>
+          <h3>Use Promise.resolve or $q.resolve</h3>
+        </section>
+        <section>
+
+        </section>
+      </section>
+      <section>
+        <section>
+          <h3>Don't break the then chain</h3>
+http://taoofcode.net/promise-anti-patterns/
+function anAsyncCall() {
+    var promise = doSomethingAsync();
+    promise.then(function() {
+        somethingComplicated();
+    });
+    
+    return promise;
+}
+        </section>
+        <section>
+  function anAsyncCall() {
+    var promise = doSomethingAsync();
+    return promise.then(function() {
+        somethingComplicated()
+    });   
+}
+        </section>
+      </section>
+      <section>
+        <section>
+          <h2>Puzzles!</h2>
+        </section>
+        <section>
+          <a class="jsbin-embed" href="https://jsbin.com/wajigus/1/embed?js,console,output">JS Bin on jsbin.com</a>
+        </section>
+      </section>
+      <section>
+        <section>
+          <h2>Promise/A+ and ES6 Promise spec</h2>
+        </section>
+      </section>
+      <section>
+        <section>
+          <h2>Handling unhandled rejections</h2>
+          <p>Some promise libraries require <code>.done()</code> so that unhandled rejected promises are known</p>
+          <p>Other libraries use a heuristic to determine when a rejected promise goes unhandled</p>
+        </section>
+      </section>
+      <section>
+        <section>
+          <h2>Do not use JQuery promises</h2>
+        </section>
+        <section>
+          <h3>Error handling</h3>
+          <p>
+            JQuery does not have a way to mark a rejected promise as resolved <br/>
+            <small>Once an exception is thrown, that’s it! No more executing</small>
+          </p>
+          <a class="jsbin-embed" href="http://jsbin.com/fuzofe/embed?js,console&height=400px">JS Bin on jsbin.com</a>
+        </section>
+        <section>
+          <h3>Proper Error handling</h3>
+          <a class="jsbin-embed" href="http://jsbin.com/gadizuf/embed?js,console&height=400px">JS Bin on jsbin.com</a>
+        </section>
+        <section>
+          <h3>Not always async</h3>
+          <p>JQuery sometimes runs synchronously and sometimes runs asynchrounously</p>
+          <pre><code class="javascript" data-trim>
+jQueryPromise.then(function () {
+    myObject.state = "X";
+});
+myObject.state = "A";
+        </code></pre>
+        </section>
+        <section>
+          <h3>Current state</h3>
+          <p>JQuery 3.x is Promise/A+ comformant</p>
+        </section>
+      </section>
+      <section>
+        <section>
+          <h2>Popular Promise libraries</h2>
+          <ul>
+            <li>
+              <a href="https://github.com/petkaantonov/bluebird">Bluebird</a><br /> A full featured promise library with
+              unmatched performance
+            </li>
+            <li>
+              <a href="https://github.com/kriskowal/q">Q</a><br /> A promise library for JavaScript. Inspired Angular’s $q
+            </li>
+          </ul>
+        </section>
+        <section>
+          <h2>More popular Promise libraries</h2>
+          <ul>
+            <li>
+              <a href="https://github.com/tildeio/rsvp.js">rsvp.js</a><br /> A lightweight library that provides tools for
+              organizing asynchronous code
+            </li>
+            <li>
+              <a href="https://github.com/stefanpenner/es6-promise">es6-promise</a><br /> A polyfill for ES6-style Promises.
+              Subset of rsvp to minimally match ES6
+            </li>
+          </ul>
+        </section>
+        <section>
+          <h2>Personal favorite</h2>
+          <p>
+            <a href="https://github.com/calvinmetcalf/lie">lie</a><br />A basic but performant promise implementation
+            <br /> Recommended by Edge performance PM
+          </p>
+        </section>
+      </section>
+      <section>
+        <h2>Resources</h2>
+        <p>Talk largely inspired by</p>
+        <ul>
+          <li>https://blog.domenic.me/youre-missing-the-point-of-promises/</li>
+          <li>https://pouchdb.com/2015/05/18/we-have-a-problem-with-promises.html</li>
+        </ul>
+        <p>Check out <a href="https://www.youtube.com/watch?v=hf1T_AONQJU&feature=youtu.be">great youtube talk on promises</a></p>
+        <p>Promises explanation: https://www.promisejs.org/</p>
+        <p>More good patterns and anti-patterns</p>
+        <ul>
+          <li>http://taoofcode.net/promise-anti-patterns/</li>
+          <li>http://www.datchley.name/promise-patterns-anti-patterns/</li>
+        </ul>
+      </section>
+    </div>
+  </div>
+
+
+  <script src="node_modules/lie/dist/lie.polyfill.js"></script>
+  <script src="http://static.jsbin.com/js/embed.min.js?3.41.10"></script>
+  <script src="lib/highlight.min.js"></script>
+  <script src="node_modules/reveal.js/js/reveal.js"></script>
+  <script>
+    Reveal.initialize({
+      history: true,
+      dependencies: [
+        // Syntax highlight for <code> elements
+        { src: 'node_modules/reveal.js/plugin/highlight/highlight.js', async: true, callback: function () { hljs.initHighlightingOnLoad(); } },
+        // Zoom in and out with Alt+click
+        { src: 'node_modules/reveal.js/plugin/zoom-js/zoom.js', async: true },
+      ]
+    });
+  </script>
+
+</body>
+
+</html>

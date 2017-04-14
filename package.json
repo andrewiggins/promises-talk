@@ -1,0 +1,24 @@
+{
+  "name": "promises-talk",
+  "version": "1.0.0",
+  "description": "A presentation on promises",
+  "main": "index.html",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/andrewiggins/promises-talk.git"
+  },
+  "author": "Andre Wiggins",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/andrewiggins/promises-talk/issues"
+  },
+  "homepage": "https://github.com/andrewiggins/promises-talk#readme",
+  "dependencies": {
+    "headjs": "^1.0.3",
+    "lie": "^3.1.1",
+    "reveal.js": "^3.4.1"
+  }
+}
