@@ -6,9 +6,9 @@
   <meta name="viewport" content="width=device-width">
   <title>You're missing the point of Promises</title>
 
-  <link rel="stylesheet" href="lib/zenburn.min.css">
-  <link rel="stylesheet" href="node_modules/reveal.js/css/reveal.css">
-  <link rel="stylesheet" href="node_modules/reveal.js/css/theme/black.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.11.0/styles/zenburn.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/3.4.1/css/reveal.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/3.4.1/css/theme/black.min.css">
   <style>
     .hidden {
       display: none !important;
@@ -25,6 +25,10 @@
     .slides section:nth-child(1) h1 {
       font-size: 2.0em;
       text-transform: none;
+    }
+
+    .slides section:nth-child(1) small {
+      display: block;
     }
     
     .column-code {
@@ -49,12 +53,12 @@
     }
   </style>
 
-  <script src="node_modules/headjs/dist/1.0.0/head.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/headjs/1.0.3/head.min.js"></script>
   <script>
     var link = document.createElement('link');
     link.rel = 'stylesheet';
     link.type = 'text/css';
-    link.href = window.location.search.match(/print-pdf/gi) ? 'node_modules/reveal.js/css/print/pdf.css' : 'node_modules/reveal.js/css/print/paper.css';
+    link.href = window.location.search.match(/print-pdf/gi) ? 'https://cdnjs.cloudflare.com/ajax/libs/reveal.js/3.4.1/css/print/pdf.min.css' : 'https://cdnjs.cloudflare.com/ajax/libs/reveal.js/3.4.1/css/print/paper.min.css';
     document.getElementsByTagName('head')[0].appendChild(link);
   </script>
 </head>
@@ -66,6 +70,9 @@
       <section>
         <h1>You are missing the point of promises</h1>
         <p>MeePortal Learning Series<br /> Andre Wiggins <br /> April 15, 2017</p>
+        <small>Use the spacebar to go to next slide.</small>
+        <small>Use the arrow keys to navigate</small>
+        <small>Press <code>Esc</code> to see an overview</small>
       </section>
       <section>
         <p>Talk largely inspired/taken from</p>
@@ -648,16 +655,16 @@ doSomething
 
   <script src="node_modules/lie/dist/lie.polyfill.js"></script>
   <script src="http://static.jsbin.com/js/embed.min.js?3.41.10"></script>
-  <script src="lib/highlight.min.js"></script>
-  <script src="node_modules/reveal.js/js/reveal.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.11.0/highlight.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/3.4.1/js/reveal.min.js"></script>
   <script>
     Reveal.initialize({
       history: true,
       dependencies: [
         // Syntax highlight for <code> elements
-        { src: 'node_modules/reveal.js/plugin/highlight/highlight.js', async: true, callback: function () { hljs.initHighlightingOnLoad(); } },
+        { src: 'https://cdnjs.cloudflare.com/ajax/libs/reveal.js/3.4.1/plugin/highlight/highlight.min.js', async: true, callback: function () { hljs.initHighlightingOnLoad(); } },
         // Zoom in and out with Alt+click
-        { src: 'node_modules/reveal.js/plugin/zoom-js/zoom.js', async: true },
+        { src: 'https://cdnjs.cloudflare.com/ajax/libs/reveal.js/3.4.1/plugin/zoom-js/zoom.min.js', async: true },
       ]
     });
   </script>
