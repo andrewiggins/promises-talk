@@ -1706,6 +1706,10 @@ body {
       text-transform: none;
     }
 
+    .slides section:nth-child(1) small {
+      display: block;
+    }
+
     .column-code {
       display: flex;
       flex-direction: row;
@@ -2930,7 +2934,7 @@ body {
     <div class="slides">
       <section>
         <h1>You are missing the point of promises</h1>
-        <p>MeePortal Learning Series<br> Andre Wiggins <br> April 15, 2017</p>
+        <p>Seattle Code Camp<br> Andre Wiggins <br> September 9, 2017</p>
         <small>Use the spacebar to go to next slide.</small>
         <small>Use the arrow keys to navigate</small>
         <small>Press <code>Esc</code> to see an overview</small>
@@ -2993,11 +2997,11 @@ getUser(&quot;andwi&quot;)
         </section>
         <section>
           <h3>More than just callback aggregation</h3>
-          <p>Promises bring back two fundamental aspects of synchronous functions</p>
+          <p>Promises bring back three fundamental aspects of synchronous functions</p>
           <ul>
             <li>using <code>return</code> for output</li>
             <li>using <code>throw</code> for errors</li>
-            <li>using &quot;the stack&quot; to manage relationship between outputs, inputs, and errors</li>
+            <li>using &quot;the stack&quot; to manage relationship between inputs, outputs, and errors</li>
           </ul>
           <p>In other words, make asynchronous code behave more like synchronous code</p>
         </section>
@@ -3005,12 +3009,15 @@ getUser(&quot;andwi&quot;)
           <h3>Synchronous functions</h3>
           <pre><code class="language-javascript full-slide" data-trim="" contenteditable="">
 try {
-  var tweets = getTweetsFor(&quot;domenic&quot;); // blocking
-  var shortUrls = parseTweetsForUrls(tweets);
-  var mostRecentShortUrl = shortUrls[0];
-  var expandedUrl = expandUrlUsingTwitterApi(mostRecentShortUrl);
+  var tweets = getTweetsFor(&quot;domenic&quot;);
+  var shortUrls = parseUrls(tweets);
+  var firstShortUrl = shortUrls[0];
+  var expandedUrl = expandUrlApi(firstShortUrl);
+
   var responseBody = httpGet(expandedUrl);
+
   console.log(&quot;Most recent link text:&quot;, responseBody);
+
 } catch (error) {
   console.error(&quot;Error with the twitterverse: &quot;, error);
 }
@@ -3132,12 +3139,12 @@ db.allDocs({include_docs: true}).then(function (result) {
       </section>
       <section>
         <section>
-          <h3>Don&apos;t use <code>.then</code> <code>onRejection</code> parameter</h3>
+          <h3>Avoid using the <code>.then</code> <code>onRejection</code> parameter</h3>
           <pre><code class="language-javascript full-slide" data-trim="" contenteditable="">
 somePromise().then(function() {
   throw new Error(&quot;I can&apos;t handle the result of somePromise!&quot;);
 }, function (error) {
-  console.log(error) // &lt;-- never gets called with the error thrown above
+  console.log(error) // &lt;-- never gets called with above error
 })
           </code></pre>
         </section>
@@ -3152,7 +3159,7 @@ somePromise().then(function () {
       </section>
       <section>
         <section>
-          <h3>Don&apos;t use side effects instead of returning</h3>
+          <h3>Avoid performing side effects without returning</h3>
           <pre><code class="language-javascript full-slide" data-trim="" contenteditable="">
 somePromise().then(function () {
   someOtherPromise();
@@ -3189,7 +3196,7 @@ getUserByName(&apos;nolan&apos;).then(function (user) {
         </section>
         <section>
           <h3>Do use return and throw</h3>
-          <p>Throws a synchronous error</p>
+          <p>Throw a synchronous error</p>
           <pre><code class="language-javascript full-slide" data-trim="" contenteditable="">
 getUserByName(&apos;nolan&apos;).then(function (user) {
   if (user.isLoggedOut()) {
@@ -3209,7 +3216,7 @@ getUserByName(&apos;nolan&apos;).then(function (user) {
       </section>
       <section>
         <section>
-          <h3>Don&apos;t use defer</h3>
+          <h3>Avoid using deferred pattern</h3>
           <p>Doesn&apos;t catch synchronous errors for you</p>
           <pre><code class="language-javascript full-slide" data-trim="" contenteditable="">
 function delay(ms) {
@@ -3270,7 +3277,7 @@ Promise.resolve(someSynchronousValue).then(/* ... */);
       </section>
       <section>
         <section>
-          <h3>Don&apos;t break the <code>then</code> chain</h3>
+          <h3>Avoid breaking the <code>then</code> chain</h3>
           <pre><code class="language-javascript full-slide" data-trim="" contenteditable="">
 function anAsyncCall() {
     var promise = doSomethingAsync();
@@ -3484,7 +3491,7 @@ doSomething
         <section>
           <h2>Personal favorite</h2>
           <p>
-            <a href="https://github.com/calvinmetcalf/lie">lie</a><br>A basic but performant promise implementation
+            <a href="https://github.com/calvinmetcalf/lie">lie</a><br>A basic but small (&lt; 2kb) performant promise implementation
             <br> Recommended by Edge performance PM
           </p>
         </section>
@@ -3509,11 +3516,10 @@ doSomething
 
 
   <script>
-    document.getElementById("t")
     Array.from(document.querySelectorAll("pre>code")).forEach(element => {
       element.setAttribute("contenteditable", "");
-      element.hasAttribute("data-notrim") ? null : element.setAttribute("data-trim", "");
       element.setAttribute("spellcheck", "false");
+      element.hasAttribute("data-notrim") ? null : element.setAttribute("data-trim", "");
     });
   </script>
   <script data-src="node_modules\lie\dist\lie.polyfill.js">// <![CDATA[ 

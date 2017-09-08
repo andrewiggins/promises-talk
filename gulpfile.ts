@@ -33,7 +33,7 @@ gulp.task('html', function () {
 gulp.task('connect', function () {
     connect.server({
         livereload: true,
-        root: 'dist'
+        root: __dirname
     });
 });
 
