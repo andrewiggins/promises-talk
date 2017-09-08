@@ -7,6 +7,7 @@ import * as gulp from 'gulp';
 import * as gutil from 'gulp-util';
 import * as rename from 'gulp-rename';
 import * as cheerio from 'cheerio';
+import * as VinylFile from 'vinyl';
 
 const connect = require('gulp-connect');
 
@@ -24,6 +25,7 @@ gulp.task('html', function () {
         .pipe(rename((path) => path.extname = '-inline.html'))
         .pipe(new InlineScripts())
         .pipe(new InlineStyles())
+        .pipe(new InlineImages())
         .pipe(gulp.dest('dist'))
         .pipe(connect.reload());
 });
@@ -47,46 +49,41 @@ gulp.task('clean', function () {
 // Custom Transforms
 // =======================================================
 
-const map = (array, callback) => Array.prototype.map.call(array, callback);
+type TransformCallback = (error?: Error | null, data?: any) => void;
 
-function readFile(path: string): Promise<string> {
+function readFile(path: string, encoding: string | null = 'utf8'): Promise<string> {
     return new Promise<string>((resolve, reject) => {
-        fs.readFile(path, 'utf8', (err, data) => {
+        let callback = (err: any, data: any) => {
             if (err) {
                 reject(err);
             }
             else {
                 resolve(data);
             }
-        });
-    });
-}
+        };
 
-function writeFile(filename: string, contents: string): Promise<void> {
-    return new Promise<void>((resolve, reject) => {
-        fs.writeFile(filename, contents, (err) => {
-            if (err) {
-                reject(err);
-            }
-            else {
-                resolve();
-            }
-        })
-    })
+        if (encoding) {
+            fs.readFile(path, encoding, callback);
+        }
+        else {
+            fs.readFile(path, callback);
+        }
+
+    });
 }
 
 
 abstract class HtmlTransform extends stream.Transform {
-    
-    abstract pluginName: string;
-    
+
+    protected abstract pluginName: string;
+
     constructor() {
-        super({ objectMode: true })
+        super({ objectMode: true });
     }
 
-    abstract transformHtml(file: any): Promise<string>;
+    protected abstract transformHtml(contents: string, relativePath: string): Promise<string>;
 
-    _transform(file, encoding, callback) {
+    public _transform(file: VinylFile, encoding: string, callback: TransformCallback): void {
         if (file.isNull()) {
             return callback(null, file);
         }
@@ -95,43 +92,46 @@ abstract class HtmlTransform extends stream.Transform {
             this.emit('error', new gutil.PluginError(this.pluginName, 'Streams not supported!'));
         }
         else if (file.isBuffer()) {
-            this.transformHtml(file)
-                .then(newHtml => {
-                    file.contents = new Buffer(newHtml, 'utf8');
-                    callback(null, file) 
-                })
-                .catch(reason => { 
-                    let error = new gutil.PluginError(this.pluginName, reason, {showStack: true});
-                    console.error(error.toString());
-                    callback(error);
-                });
+            this.transformHtml(file.contents.toString(), file.relative).then(newHtml => {
+                file.contents = new Buffer(newHtml, 'utf8');
+                callback(null, file);
+            })
+            .catch(reason => {
+                let error = new gutil.PluginError(this.pluginName, reason, {showStack: true});
+                console.error(error.toString());
+                callback(error as Error);
+            });
         }
     }
 }
 
 
 class InlineScripts extends HtmlTransform {
-    public pluginName = 'InlineScripts';
+    public pluginName: string = 'InlineScripts';
 
-    transformHtml(file: any): Promise<string> {
+    protected transformHtml(contents: string, relative: string): Promise<string> {
         // Parse html
-        let $ = cheerio.load(file.contents)
+        let $ = cheerio.load(contents);
 
         // for each <script> tag with a relative url in the current file
-        let scripts = $('script[src]').filter((index, element) => url.parse(element.attribs['src']).protocol == null)
-        
-        return Promise.all(map(scripts, (element) => {
+        let scripts = $('script[src]').filter((index, element) => url.parse(element.attribs['src']).protocol == null);
+
+        return Promise.all(Array.from(scripts).map(element => {
             let $element = $(element);
-            let srcPath = path.join(path.dirname(file.relative), $element.attr('src'));
+            let srcPath = path.join(path.dirname(relative), $element.attr('src'));
 
             // read contents of file at src attr relative to 'dist'
-            return readFile(srcPath).then(contents => {
-                // remove sourcemap line
-                contents = contents.replace(/\s*\/\/# sourceMappingURL=.*/g, '');
+            return readFile(srcPath).then(srcContents => {
+                // remove sourcemap line and
+                // fix bug in hljs script from being inlined properly
+                srcContents = srcContents
+                    .replace(/\s*\/\/# sourceMappingURL=.*/g, '')
+                    .replace(/"<\/script>"/g, `"</scr"+"ipt>"`);
+
                 // place contents of file into contents of <script> tag
-                $element.text(contents);
+                $element.text(`// <![CDATA[ \r\n ${srcContents} \r\n // ]]>`);
                 // remove src attr
-                $element.removeAttr('src')
+                $element.removeAttr('src');
                 // put original source as data url
                 $element.attr('data-src', srcPath);
             });
@@ -142,32 +142,63 @@ class InlineScripts extends HtmlTransform {
 
 
 class InlineStyles extends HtmlTransform {
-    public pluginName = 'InlineStyles';
-    
-    transformHtml(file: any): Promise<string> {
+    public pluginName: string = 'InlineStyles';
+
+    protected transformHtml(contents: string, relative: string): Promise<string> {
         // Parse html
-        let $ = cheerio.load(file.contents);
+        let $ = cheerio.load(contents);
 
         // for each <link> tag with a relative url
-        let styles = $('link[rel=stylesheet][href]').filter((index, element) => url.parse(element.attribs['href']).protocol == null)
-        
-        return Promise.all(map(styles, (element) => {
+        let styles = $('link[rel=stylesheet][href]').filter((index, element) => url.parse(element.attribs['href']).protocol == null);
+
+        return Promise.all(Array.from(styles).map(element => {
             let $element = $(element);
-            let srcPath = path.join(path.dirname(file.relative), $element.attr('href'));
+            let srcPath = path.join(path.dirname(relative), $element.attr('href'));
 
             // read contents of file at href attr relative to 'dist'
-            return readFile(srcPath).then(contents => {
+            return readFile(srcPath).then(srcContents => {
                 // remove sourcemap line
-                contents = contents.replace(/\s*\/\/# sourceMappingURL=.*/g, '');
+                srcContents = srcContents.replace(/\s*\/\/# sourceMappingURL=.*/g, '');
 
                 // create <style> tag with contents of file
                 let styleTag = $('<style>')
                     .attr('data-href', $element.attr('href'))
                     .attr('type', 'text/css')
-                    .text(contents);
+                    .text(srcContents);
 
                 // replace <link> tag with <style> tag
                 $element.replaceWith(styleTag);
+            });
+        }))
+        .then(() => $.html());
+    }
+}
+
+
+class InlineImages extends HtmlTransform {
+    public pluginName: string = 'InlineImages';
+
+    protected transformHtml(contents: string, relative: string): Promise<string> {
+        // Parse html
+        let $ = cheerio.load(contents);
+
+        // for each <link> tag with a relative url
+        let images = $('img[src]').filter((index, element) => url.parse(element.attribs['src']).protocol == null);
+
+        return Promise.all(Array.from(images).map(element => {
+            let $element = $(element);
+            let srcPath = path.join(path.dirname(relative), $element.attr('src'));
+
+            // read contents of file at href attr relative to 'dist'
+            return readFile(srcPath, null).then(srcContents => {
+                // remove sourcemap line
+                let base64 = new Buffer(srcContents).toString('base64');
+                let imageExtension = path.extname(srcPath).slice(1) || 'png';
+                let newSrcPath = `data:image/${imageExtension};base64,${base64}`;
+
+                // replace <image> tag with <style> tag
+                $element.attr('data-original-src', $element.attr('src'));
+                $element.attr('src', newSrcPath);
             });
         }))
         .then(() => $.html());
