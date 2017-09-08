@@ -8,6 +8,7 @@ import * as gutil from 'gulp-util';
 import * as rename from 'gulp-rename';
 import * as cheerio from 'cheerio';
 import * as VinylFile from 'vinyl';
+import * as runsequence from 'run-sequence';
 
 const connect = require('gulp-connect');
 
@@ -16,9 +17,13 @@ const connect = require('gulp-connect');
 // =======================================================
 gulp.task('default', ['dev']);
 
-gulp.task('dev', ['build', 'watch', 'connect']);
+gulp.task('dev', function (done) {
+    runsequence('build', 'watch', 'connect', done);
+});
 
-gulp.task('build', ['html']);
+gulp.task('build', function (done) {
+    runsequence('html', done);
+});
 
 gulp.task('html', function () {
     return gulp.src(['index.html'])

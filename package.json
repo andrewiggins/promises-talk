@@ -33,6 +33,7 @@
     "gulp-connect": "^5.0.0",
     "gulp-rename": "^1.2.2",
     "gulp-util": "^3.0.8",
+    "run-sequence": "^2.1.0",
     "ts-node": "^3.0.2",
     "typescript": "^2.2.2"
   }
