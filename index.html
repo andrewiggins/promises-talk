@@ -13,20 +13,20 @@
     .hidden {
       display: none !important;
     }
-    
+
     .reveal .slides {
       text-align: left;
     }
-    
+
     .reveal pre code.full-slide {
       max-height: 500px;
     }
-    
+
     .slides section:nth-child(1) h1 {
       font-size: 2.0em;
       text-transform: none;
     }
-    
+
     .column-code {
       display: flex;
       flex-direction: row;
@@ -35,7 +35,7 @@
       right: 100px;
       width: calc(100% + 200px);
     }
-    
+
     .column-code pre {
       overflow: auto;
       flex: 1 1 auto;
@@ -66,6 +66,9 @@
       <section>
         <h1>You are missing the point of promises</h1>
         <p>MeePortal Learning Series<br /> Andre Wiggins <br /> April 15, 2017</p>
+        <small>Use the spacebar to go to next slide.</small>
+        <small>Use the arrow keys to navigate</small>
+        <small>Press <code>Esc</code> to see an overview</small>
       </section>
       <section>
         <p>Talk largely inspired/taken from</p>
@@ -129,7 +132,7 @@ getUser("andwi")
           <ul>
             <li>using <code>return</code> for output</li>
             <li>using <code>throw</code> for errors</li>
-            <li>using "the stack"" to manage relationship between outputs, inputs, and errors</li>
+            <li>using "the stack" to manage relationship between outputs, inputs, and errors</li>
           </ul>
           <p>In other words, make asynchronous code behave more like synchronous code</p>
         </section>
@@ -152,12 +155,12 @@ try {
         <section>
           <h3>Same code but async with promises</h3>
           <div class="column-code">
-            <pre><code class="language-javascript full-slide" contenteditable>
+            <pre><code class="language-javascript full-slide" contenteditable style="overflow: hidden">
 try {
-  var tweets = getTweetsFor("domenic"); // blocking
-  var shortUrls = parseTweetsForUrls(tweets);
-  var mostRecentShortUrl = shortUrls[0];
-  var expandedUrl = expandUrlUsingTwitterApi(mostRecentShortUrl);
+  var tweets = getTweetsFor("domenic");
+  var shortUrls = parseUrls(tweets);
+  var firstShortUrl = shortUrls[0];
+  var expandedUrl = expandUrlApi(firstShortUrl);
 
   var responseBody = httpGet(expandedUrl);
 
@@ -167,21 +170,19 @@ try {
   console.error("Error with the twitterverse: ", error);
 }
             </code></pre>
-            <pre><code class="language-javascript full-slide" contenteditable>
-getTweetsFor("domenic") // promise-returning function
-  .then(function (tweets) {
-    var shortUrls = parseTweetsForUrls(tweets);
-    var mostRecentShortUrl = shortUrls[0];
-    return expandUrlUsingTwitterApi(mostRecentShortUrl); // promise
-  })
-  .then(httpGet) // promise-returning function
-  .then(function (response) {
-    console.log("Most recent link text:", responseBody);
-  })
-  .catch(function (error) {
-    console.error("Error with the twitterverse:", error);
-  });
-            </code></pre>
+            <pre><code class="language-javascript full-slide" contenteditable data-notrim style="overflow: hidden">
+getTweetsFor("domenic").then(function (tweets) {
+  var shortUrls = parseUrls(tweets);
+  var firstShortUrl = shortUrls[0];
+  return expandUrlApi(firstShortUrl);
+})
+.then(httpGet)
+.then(function (response) {
+  console.log("Most recent link text:", responseBody);
+})
+.catch(function (error) {
+  console.error("Error with the twitterverse:", error);
+});</code></pre>
           </div>
           <small>Functional composition &amp; error bubbling are enabled using Promises</small>
         </section>
@@ -230,7 +231,7 @@ remotedb.allDocs(...).then(function (resultOfAllDocs) {
           <pre><code class="language-javascript full-slide" contenteditable>
 putYourRightFootIn()
   .then(putYourRightFootOut)
-  .then(putYourRightFootIn)  
+  .then(putYourRightFootIn)
   .then(shakeItAllAbout);
           </code></pre>
         </section>
@@ -242,7 +243,7 @@ putYourRightFootIn()
 // I want to remove() all docs
 db.allDocs({include_docs: true}).then(function (result) {
   result.rows.forEach(function (row) {
-    db.remove(row.doc);  
+    db.remove(row.doc);
   });
 }).then(function () {
   // I naively believe all docs have been removed() now!
@@ -372,7 +373,7 @@ function delay(ms) {
           <h3>Don't recreate promises when you already have one</h3>
           <p>..using either the defer pattern or the Promise constructor</p>
           <pre><code class="language-javascript full-slide" data-trim contenteditable>
-function getSomethingAsync(url) {  
+function getSomethingAsync(url) {
   var deferred = $q.defer();
   $http.get(url).then(function(json) {
     // do some stuff ...
@@ -385,7 +386,7 @@ function getSomethingAsync(url) {
         <section>
           <h3>Do chain more promises and handling off the existing promise</h3>
           <pre><code class="language-javascript full-slide" data-trim contenteditable>
-function getSomethingAsync(url) {  
+function getSomethingAsync(url) {
   return $http.get(url).then(function(json) {
     return JSON.parse(json);
   });
@@ -411,7 +412,7 @@ function anAsyncCall() {
     promise.then(function() {
         somethingComplicated();
     });
-    
+
     return promise;
 }
           </code></pre>
@@ -424,7 +425,7 @@ function anAsyncCall() {
   var promise = doSomethingAsync();
   return promise.then(function() {
       somethingComplicated()
-  });   
+  });
 }
           </code></pre>
         </section>
@@ -564,7 +565,7 @@ doSomething
       </section>
       <section>
         <section>
-          <h2>Do not use JQuery promises</h2>
+          <h2>Do not use JQuery (&lt; 3.x) promises</h2>
         </section>
         <section>
           <h3>Error handling</h3>
@@ -587,10 +588,6 @@ doSomething
           <h3>JQuery promises are not always async</h3>
           <p>JQuery sometimes executes resolution chain synchronously and sometimes runs asynchrounously</p>
           <a class="jsbin-embed" href="http://jsbin.com/neyemu/embed?js,console">JS Bin on jsbin.com</a>
-        </section>
-        <section>
-          <h3>Current state</h3>
-          <p>JQuery 3.x is Promise/A+ comformant</p>
         </section>
       </section>
       <section>
@@ -646,20 +643,26 @@ doSomething
   </div>
 
 
+  <script>
+    document.getElementById("t")
+    Array.from(document.querySelectorAll("pre>code")).forEach(element => {
+      element.setAttribute("contenteditable", "");
+      element.hasAttribute("data-notrim") ? null : element.setAttribute("data-trim", "");
+      element.setAttribute("spellcheck", "false");
+    });
+  </script>
   <script src="node_modules/lie/dist/lie.polyfill.js"></script>
   <script src="http://static.jsbin.com/js/embed.min.js?3.41.10"></script>
-  <script src="lib/highlight.min.js"></script>
   <script src="node_modules/reveal.js/js/reveal.js"></script>
+  <script src="node_modules/reveal.js/plugin/highlight/highlight.js"></script>
+  <script src="node_modules/reveal.js/plugin/zoom-js/zoom.js"></script>
+  <script src="node_modules/reveal.js/plugin/notes/notes.js"></script>
   <script>
     Reveal.initialize({
       history: true,
-      dependencies: [
-        // Syntax highlight for <code> elements
-        { src: 'node_modules/reveal.js/plugin/highlight/highlight.js', async: true, callback: function () { hljs.initHighlightingOnLoad(); } },
-        // Zoom in and out with Alt+click
-        { src: 'node_modules/reveal.js/plugin/zoom-js/zoom.js', async: true },
-      ]
     });
+
+    hljs.initHighlightingOnLoad();
   </script>
 
 </body>
