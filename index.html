@@ -83,29 +83,24 @@
         <h1>You are missing the point of promises</h1>
         <p>Seattle Code Camp<br /> Andre Wiggins <br /> September 9, 2017</p>
         <small>Use the spacebar to go to next slide.</small>
-        <small>Use the arrow keys to navigate</small>
-        <small>Press <code>Esc</code> to see an overview</small>
+        <small>Press ? on your keyboard for instructions</small>
       </section>
       <section>
         <p>Talk largely inspired/taken from</p>
         <ul>
-          <li><a href="https://blog.domenic.me/youre-missing-the-point-of-promises/">You're missing the point of Promises</a> by Domenic Denicola</li>
-          <li><a href="https://pouchdb.com/2015/05/18/we-have-a-problem-with-promises.html">We have a problem with Promises</a> by Nolan Lawson</li>
+          <li><a href="https://blog.domenic.me/youre-missing-the-point-of-promises/">You're missing the point of Promises</a> <br />by Domenic Denicola</li>
+          <li><a href="https://pouchdb.com/2015/05/18/we-have-a-problem-with-promises.html">We have a problem with Promises</a> <br />by Nolan Lawson</li>
         </ul>
       </section>
       <section id="me">
         <img src="assets/me.jpg" alt="Picture of author, Andre Wiggins" />
         <div>
           <small>Senior Software Developer at Microsoft</small>
-          <small>Web Developer</small>
-          <small>Bouldering</small>
+          <small>Web Developer, Casual Boulderer</small>
+          <small>Twitter: @andre_wiggins</small>
         </div>
       </section>
       <section>
-        <section>
-          <h2>What are promises?</h2>
-          <blockquote>Promises are a software abstraction that makes working with asynchronous operations much more pleasant.</blockquote>
-        </section>
         <section>
           <h3>Old callback pattern</h3>
           <pre><code class="lang-javascript full-slide" data-trim contenteditable>
@@ -139,7 +134,7 @@ function readJSON(filename) {
         </section>
         <section>
           <h3>So what are Promises?</h3>
-          <p>Objects with a <code>then()</code> method that allow us to assign code to be run (callback) once an async result
+          <p>Objects with a <code>then(onFulfilled, onRejection)</code> method that allow us to assign code to be run (callback) once an async result
             is available</p>
           <pre><code class="javascript">
 getUser("andwi")
