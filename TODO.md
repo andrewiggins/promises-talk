@@ -1,6 +1,5 @@
 # TODO
 
-0. Add intro slide about me
 1. Give intro on callbacks and why they aren't great
 2. Define the .then contract and give names to parameters
 3. Improve puzzle explanation
