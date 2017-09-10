@@ -80,7 +80,7 @@
   <div class="reveal">
     <div class="slides">
       <section>
-        <h1>You are missing the point of promises</h1>
+        <h1>You're missing the point of promises</h1>
         <p>Seattle Code Camp<br /> Andre Wiggins <br /> September 9, 2017</p>
         <small>Use the spacebar to go to next slide.</small>
         <small>Press ? on your keyboard for instructions</small>
@@ -714,6 +714,20 @@ doSomething
     });
 
     hljs.initHighlightingOnLoad();
+  </script>
+  <script>
+    function delay(ms, shouldFail) {
+      return new Promise((resolve, reject) => {
+        setTimeout(() => {
+          if (shouldFail) {
+            reject(new Error("You told me to fail..."));
+          }
+          else {
+            resolve("Timeout completed");
+          }
+        }, ms);
+      });
+    }
   </script>
 
 </body>
