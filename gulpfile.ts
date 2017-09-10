@@ -43,7 +43,7 @@ gulp.task('html', function () {
 });
 
 gulp.task('assets', function () {
-    gulp.src(['./assets/**/*'], { base: '.' }).pipe(gulp.dest(paths.dist));
+    gulp.src(['./assets/**/*', './.nojekyll'], { base: '.' }).pipe(gulp.dest(paths.dist));
 });
 
 /** Copy dependencies to dist folder */
