@@ -6,11 +6,17 @@ import * as del from 'del';
 import * as gulp from 'gulp';
 import * as gutil from 'gulp-util';
 import * as rename from 'gulp-rename';
+import * as connect from 'gulp-connect';
+import * as ghPages from 'gulp-gh-pages';
 import * as cheerio from 'cheerio';
 import * as VinylFile from 'vinyl';
 import * as runsequence from 'run-sequence';
 
-const connect = require('gulp-connect');
+const pkg = require('./package.json');
+const paths = {
+    dist: path.join(__dirname, 'dist'),
+    deps: Object.keys(pkg.dependencies)
+}
 
 
 // Tasks
@@ -22,23 +28,35 @@ gulp.task('dev', function (done) {
 });
 
 gulp.task('build', function (done) {
-    runsequence('html', done);
+    runsequence('html', 'assets', 'deps', done);
 });
 
 gulp.task('html', function () {
     return gulp.src(['index.html'])
+        .pipe(gulp.dest(paths.dist))
         .pipe(rename((path) => path.extname = '-inline.html'))
         .pipe(new InlineScripts())
         .pipe(new InlineStyles())
         .pipe(new InlineImages())
-        .pipe(gulp.dest('dist'))
+        .pipe(gulp.dest(paths.dist))
         .pipe(connect.reload());
+});
+
+gulp.task('assets', function () {
+    gulp.src(['./assets/**/*'], { base: '.' }).pipe(gulp.dest(paths.dist));
+});
+
+/** Copy dependencies to dist folder */
+gulp.task('deps', function () {
+    return gulp
+        .src(paths.deps.map(dep => `node_modules/${dep}/**/*`), { base: '.' })
+        .pipe(gulp.dest(paths.dist));
 });
 
 gulp.task('connect', function () {
     connect.server({
         livereload: true,
-        root: __dirname
+        root: paths.dist
     });
 });
 
@@ -47,7 +65,12 @@ gulp.task('watch', function () {
 });
 
 gulp.task('clean', function () {
-    return Promise.all([del('dist')]);
+    return Promise.all([del(paths.dist)]);
+});
+
+gulp.task('deploy', ['build'], function () {
+    return gulp.src('./dist/**/*')
+        .pipe(ghPages());
 });
 
 
