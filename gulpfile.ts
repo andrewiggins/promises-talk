@@ -24,19 +24,19 @@ const paths = {
 // Tasks
 // =======================================================
 gulp.task('default', function (done) {
-    runsequence('dev', done);
+    return runsequence('dev', done);
 });
 
 gulp.task('dev', function (done) {
-    runsequence('build', 'watch', 'connect', done);
+    return runsequence('build', 'watch', 'connect', done);
 });
 
 gulp.task('build', function (done) {
-    runsequence('package', done);
+    return runsequence('package', done);
 });
 
 gulp.task('html', ['lib'], function () {
-    gulp.src(['index.html'])
+    return gulp.src(['index.html'])
         .pipe(gulp.dest(paths.dist))
         .pipe(rename((path) => path.extname = '-inline.html'))
         .pipe(new InlineScripts())
@@ -48,19 +48,19 @@ gulp.task('html', ['lib'], function () {
 
 /** Copy dependencies to dist folder */
 gulp.task('lib', function () {
-    gulp.src(paths.deps.map(dep => `node_modules/${dep}/**/*`), { base: './node_modules' })
+    return gulp.src(paths.deps.map(dep => `node_modules/${dep}/**/*`), { base: './node_modules' })
         .pipe(gulp.dest(paths.lib));
 });
 
 gulp.task('connect', function () {
-    connect.server({
+    return connect.server({
         livereload: true,
         root: paths.dist
     });
 });
 
 gulp.task('watch', function () {
-    gulp.watch(['index.html'], ['build']);
+    return gulp.watch(['index.html'], ['build']);
 });
 
 gulp.task('clean', function () {
@@ -68,12 +68,12 @@ gulp.task('clean', function () {
 });
 
 gulp.task('package', ['html'], function () {
-    gulp.src([ path.join(paths.assets, '**/*'), path.join(paths.lib, '**/*') ], { base: '.' })
+    return gulp.src([ path.join(paths.assets, '**/*'), path.join(paths.lib, '**/*') ], { base: '.' })
         .pipe(gulp.dest(paths.dist));
 });
 
 gulp.task('deploy', ['package'], function () {
-    gulp.src('./dist/**/*')
+    return gulp.src('./dist/**/*')
         .pipe(ghPages());
 });
 
