@@ -6,9 +6,9 @@
   <meta name="viewport" content="width=device-width">
   <title>You're missing the point of Promises</title>
 
-  <link rel="stylesheet" href="node_modules/reveal.js/lib/css/zenburn.css">
-  <link rel="stylesheet" href="node_modules/reveal.js/css/reveal.css">
-  <link rel="stylesheet" href="node_modules/reveal.js/css/theme/black.css">
+  <link rel="stylesheet" href="lib/reveal.js/lib/css/zenburn.css">
+  <link rel="stylesheet" href="lib/reveal.js/css/reveal.css">
+  <link rel="stylesheet" href="lib/reveal.js/css/theme/black.css">
   <style>
     .hidden {
       display: none !important;
@@ -69,7 +69,7 @@
     var link = document.createElement('link');
     link.rel = 'stylesheet';
     link.type = 'text/css';
-    link.href = window.location.search.match(/print-pdf/gi) ? 'node_modules/reveal.js/css/print/pdf.css' : 'node_modules/reveal.js/css/print/paper.css';
+    link.href = window.location.search.match(/print-pdf/gi) ? 'lib/reveal.js/css/print/pdf.css' : 'lib/reveal.js/css/print/paper.css';
     document.getElementsByTagName('head')[0].appendChild(link);
   </script>
 </head>
@@ -701,12 +701,12 @@ doSomething
       element.hasAttribute("data-notrim") ? null : element.setAttribute("data-trim", "");
     });
   </script>
-  <script src="node_modules/lie/dist/lie.polyfill.js"></script>
+  <script src="lib/lie/dist/lie.polyfill.js"></script>
   <script src="https://static.jsbin.com/js/embed.min.js?3.41.10"></script>
-  <script src="node_modules/reveal.js/js/reveal.js"></script>
-  <script src="node_modules/reveal.js/plugin/highlight/highlight.js"></script>
-  <script src="node_modules/reveal.js/plugin/zoom-js/zoom.js"></script>
-  <script src="node_modules/reveal.js/plugin/notes/notes.js"></script>
+  <script src="lib/reveal.js/js/reveal.js"></script>
+  <script src="lib/reveal.js/plugin/highlight/highlight.js"></script>
+  <script src="lib/reveal.js/plugin/zoom-js/zoom.js"></script>
+  <script src="lib/reveal.js/plugin/notes/notes.js"></script>
   <script>
     Reveal.initialize({
       history: true,

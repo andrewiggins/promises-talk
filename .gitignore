@@ -1,4 +1,5 @@
 .publish/
+lib/
 dist/
 !dist/index-inline.html
 

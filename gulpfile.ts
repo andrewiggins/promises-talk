@@ -15,24 +15,28 @@ import * as runsequence from 'run-sequence';
 const pkg = require('./package.json');
 const paths = {
     dist: path.join(__dirname, 'dist'),
-    deps: Object.keys(pkg.dependencies)
+    deps: Object.keys(pkg.dependencies),
+    assets: path.join(__dirname, 'assets'),
+    lib: path.join(__dirname, 'lib'),
 }
 
 
 // Tasks
 // =======================================================
-gulp.task('default', ['dev']);
+gulp.task('default', function (done) {
+    runsequence('dev', done);
+});
 
 gulp.task('dev', function (done) {
     runsequence('build', 'watch', 'connect', done);
 });
 
 gulp.task('build', function (done) {
-    runsequence('html', 'assets', 'deps', done);
+    runsequence('package', done);
 });
 
-gulp.task('html', function () {
-    return gulp.src(['index.html'])
+gulp.task('html', ['lib'], function () {
+    gulp.src(['index.html'])
         .pipe(gulp.dest(paths.dist))
         .pipe(rename((path) => path.extname = '-inline.html'))
         .pipe(new InlineScripts())
@@ -42,15 +46,10 @@ gulp.task('html', function () {
         .pipe(connect.reload());
 });
 
-gulp.task('assets', function () {
-    gulp.src(['./assets/**/*', './.nojekyll'], { base: '.' }).pipe(gulp.dest(paths.dist));
-});
-
 /** Copy dependencies to dist folder */
-gulp.task('deps', function () {
-    return gulp
-        .src(paths.deps.map(dep => `node_modules/${dep}/**/*`), { base: '.' })
-        .pipe(gulp.dest(paths.dist));
+gulp.task('lib', function () {
+    gulp.src(paths.deps.map(dep => `node_modules/${dep}/**/*`), { base: './node_modules' })
+        .pipe(gulp.dest(paths.lib));
 });
 
 gulp.task('connect', function () {
@@ -65,11 +64,16 @@ gulp.task('watch', function () {
 });
 
 gulp.task('clean', function () {
-    return Promise.all([del(paths.dist)]);
+    return Promise.all([del(paths.dist), del(paths.lib)]);
 });
 
-gulp.task('deploy', ['build'], function () {
-    return gulp.src('./dist/**/*')
+gulp.task('package', ['html'], function () {
+    gulp.src([ path.join(paths.assets, '**/*'), path.join(paths.lib, '**/*') ], { base: '.' })
+        .pipe(gulp.dest(paths.dist));
+});
+
+gulp.task('deploy', ['package'], function () {
+    gulp.src('./dist/**/*')
         .pipe(ghPages());
 });
 
